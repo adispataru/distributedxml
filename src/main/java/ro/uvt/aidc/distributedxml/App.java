@@ -1,5 +1,10 @@
 package ro.uvt.aidc.distributedxml;
 
+import org.apache.activemq.camel.component.ActiveMQComponent;
+import org.apache.camel.CamelContext;
+import org.apache.camel.ProducerTemplate;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.impl.DefaultCamelContext;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -14,6 +19,35 @@ import java.io.*;
 public class App {
 
     public static void main(String[] args) {
+        CamelContext context = new DefaultCamelContext();
+        try {
+            context.addComponent("activemq", ActiveMQComponent.activeMQComponent("vm://localhost?broker.persistent=false"));
+            context.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() throws Exception {
+                    from("activemq:queue:test.queue")
+                            .to("validator:file:src/main/resources/document.xsd")
+                            .to("stream:out");
+                }
+            });
+            ProducerTemplate template = context.createProducerTemplate();
+            context.start();
+            String xml = readStream(new FileInputStream("src/main/resources/document.xml"));
+            template.sendBody("activemq:test.queue", xml);
+            Thread.sleep(2000);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            try{
+                context.stop();
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void homework1(String[] args){
         try {
             parseWithDom(args);
         } catch (Exception e) {
@@ -29,8 +63,6 @@ public class App {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     public static void parseWithSax(String[] args) throws ParserConfigurationException, SAXException, IOException {
