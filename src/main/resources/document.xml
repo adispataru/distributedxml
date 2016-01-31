@@ -8,7 +8,8 @@
         <title lang="en">Harry Potter</title>
         <author>J K. Rowling</author>
         <year>2005</year>
-        <price>29.99</price> </book>
+        <price>29.99</price>
+    </book>
     <book category="web">
         <title lang="en">XQuery Kick Start</title>
         <author>James McGovern</author>
@@ -17,10 +18,18 @@
         <author>James Linn</author>
         <author>Vaidyanathan Nagarajan</author>
         <year>2003</year>
-        <price>49.99</price> </book>
+        <price>49.99</price>
+    </book>
     <book category="web" cover="paperback">
         <title lang="en">Learning XML</title>
         <author>Erik T. Ray</author>
         <year>2003</year>
-        <price>39.95</price> </book>
+        <price>39.95</price>
+    </book>
+    <book category="ninja">
+        <title lang="ro">Aventurile unui nijalau</title>
+        <author>Ion Cutarescu</author>
+        <year>2015</year>
+        <price>0.95</price>
+    </book>
 </bookstore>

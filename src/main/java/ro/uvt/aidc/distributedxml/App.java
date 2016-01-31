@@ -5,9 +5,9 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.util.jndi.JndiContext;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 import ro.uvt.aidc.distributedxml.sax.BookStoreSaxHandler;
 
 import javax.xml.parsers.*;
@@ -18,7 +18,58 @@ import java.io.*;
  */
 public class App {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        homework3(args);
+    }
+
+    public static void homework3(String[] args) throws Exception{
+        JndiContext jndiContext = new JndiContext();
+        jndiContext.bind("paperback", new Processors.PaperbackProcessor());
+        jndiContext.bind("webCategory", new Processors.WebCategoryProcessor());
+        jndiContext.bind("cheap", new Processors.CheapProcessor());
+        jndiContext.bind("romanian", new Processors.RomanianProcessor());
+        jndiContext.bind("english", new Processors.EnglishProcessor());
+        CamelContext camelContext = new DefaultCamelContext(jndiContext);
+        try {
+            camelContext.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() throws Exception {
+                    from("direct:start")
+                            .split(xpath("//book[@cover = 'paperback']"))
+                            .to("bean:paperback")
+                            .end()
+                            .split(xpath("//book[@category = 'web']"))
+                            .to("bean:webCategory")
+                            .end()
+                            .split(xpath("//book[./price < 5]"))
+                            .to("bean:cheap")
+                            .end()
+                            .split(xpath("//book[./title[@lang = 'en']]"))
+                            .to("bean:english")
+                            .end()
+                            .split(xpath("//book[./title[@lang = 'ro']]"))
+                            .to("bean:romanian")
+                            .end();
+                }
+            });
+
+            camelContext.start();
+            ProducerTemplate template = camelContext.createProducerTemplate();
+            String xml = readStream(new FileInputStream("src/main/resources/document.xml"));
+            template.sendBody("direct:start", xml);
+            template.sendBody("direct:start", "<order><product>books</product><available>false</available></order>");
+        }catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            try{
+                camelContext.stop();
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void homework2(String[] args) {
         CamelContext context = new DefaultCamelContext();
         try {
             context.addComponent("activemq", ActiveMQComponent.activeMQComponent("vm://localhost?broker.persistent=false"));
